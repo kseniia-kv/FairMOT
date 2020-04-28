@@ -52,13 +52,17 @@ def eval_seq(opt, dataloader, data_type, result_filename, save_dir=None, show_im
     timer = Timer()
     results = []
     frame_id = 0
+    if opt.gpus[0] >= 0:
+        opt.device = torch.device('cuda')
+    else:
+        opt.device = torch.device('cpu')
     for path, img, img0 in dataloader:
         if frame_id % 20 == 0:
             logger.info('Processing frame {} ({:.2f} fps)'.format(frame_id, 1. / max(1e-5, timer.average_time)))
 
         # run tracking
         timer.tic()
-        blob = torch.from_numpy(img).cuda().unsqueeze(0)
+        blob = torch.from_numpy(img).to(opt.device).unsqueeze(0)
         online_targets = tracker.update(blob, img0)
         online_tlwhs = []
         online_ids = []
@@ -137,7 +141,7 @@ def main(opt, data_root='/data/MOT16/train', det_root=None, seqs=('MOT16-05',), 
 
 
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+   # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     opt = opts().init()
 
     if not opt.val_mot16:
@@ -227,9 +231,9 @@ if __name__ == '__main__':
     seqs = [seq.strip() for seq in seqs_str.split()]
 
     main(opt,
-         data_root=data_root,
-         seqs=seqs,
-         exp_name='MOT15_val_all_dla34',
+         data_root='../data',
+         seqs=('frames_vid1',),
+         exp_name='vid1',
          show_image=False,
          save_images=False,
-         save_videos=False)
+         save_videos=True)
